@@ -18,13 +18,13 @@ char msg[10];
 
 // Define inputs
 //int iopins[] = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
-int iopins[] = {2};
-String payloadlabels[] = {"2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"};
+int iopins[] = {2, 3, 4, 5, 6, 7, 8};
 
 // Number of inputs
-const int nInputs = sizeof(iopins);
+const int nInputs = sizeof(iopins)/sizeof(int);
 int pinStatus[nInputs];
 int prevPinStatus[nInputs];
+String payloadlabels[nInputs];
 
 // Enter a MAC address for your controller below.
 // Newer Ethernet shields have a MAC address printed on a sticker on the shield
@@ -43,12 +43,6 @@ EthernetClient client;
 PubSubClient mqttClient(client);
 
 void setup() {
-  // Set pins to listen on
-  for (i = 0; i <= nInputs; i = i + 1) {
-    pinMode(iopins[i], INPUT);
-  }
-
-
   // Open serial communications and wait for port to open:
   Serial.begin(9600);
   // this check is only needed on the Leonardo:
@@ -57,7 +51,14 @@ void setup() {
   }
 
   Serial.println("OK!");
+  Serial.println(nInputs);
   
+  // Set pins to listen on and fill label string
+  for (i = 0; i < nInputs; i = i + 1) {
+    pinMode(iopins[i], INPUT);
+    payloadlabels[i] = String(iopins[i]);
+  }
+
   // start the Ethernet connection:
   if (Ethernet.begin(mac) == 0) {
     Serial.println("Failed to configure Ethernet using DHCP");
@@ -91,14 +92,17 @@ void loop() {
 
     // If the switch changed, due to noise or pressing:
     if (reading != prevPinStatus[i]) {
+      // DEBUG
+      // Serial.println("DEBOUNCE");
+      
       // reset the debouncing timer
       lastDebounceTime = millis();
     }
   
     // Debounce protection
-    if ((millis() - lastDebounceTime) > debounceDelay) {
+    if (((millis() - lastDebounceTime) > debounceDelay) && (reading != pinStatus[i])) {
       // DEBUG
-      Serial.println("CHANGE DETECTED");
+      // Serial.println("CHANGE DETECTED");
       
       String pl = payloadlabels[i];
       pl.toCharArray(msg, 10);
@@ -110,10 +114,10 @@ void loop() {
       } else if (reading != pinStatus[i] && reading == 0)
         // Detect long press
         if ((millis() - lastHighTime) > longPressTime) {
-          Serial.println("Long press detected");
+          // Serial.println("Long press detected");
           mqttClient.publish("home-assistant/arduinoIO/long", msg);
         } else {
-          Serial.println("Short press detected");
+          // Serial.println("Short press detected");
           mqttClient.publish("home-assistant/arduinoIO/short", msg);
         }
         pinStatus[i] = reading;
