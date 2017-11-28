@@ -15,10 +15,18 @@ unsigned long debounceDelay = 50;    // the debounce time; increase if the outpu
 unsigned long longPressTime = 500; // Detect  long press > was 500
 char msg[10];
 
-
+/*
+ * NB: Pins 10, 11, 12 and 13 
+ * are reserved for interfacing with 
+ * the Ethernet module and should not 
+ * be used otherwise. This reduces the
+ * number of available pins to 9, with 4 
+ * available as PWM outputs.
+ * 
+ */
+ 
 // Define inputs
-//int iopins[] = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
-int iopins[] = {2, 3, 4, 5, 6, 7, 8};
+int iopins[] = {2, 3, 4, 5, 6, 7, 8, 9, A0, A1, A2, A3, A4, A5};
 
 // Number of inputs
 const int nInputs = sizeof(iopins)/sizeof(int);
